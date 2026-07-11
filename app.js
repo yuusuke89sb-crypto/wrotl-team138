@@ -190,7 +190,7 @@ const App = {
 
                     oppHtml += `
                         <tr>
-                            <td><strong>${t.teamName}</strong></td>
+                            <td><span class="clickable-team" onclick="App.showTeamPlayers('${t.teamName}')">${t.teamName}</span></td>
                             <td>${t.count}</td>
                             <td>${t.avgRank.toFixed(2)}</td>
                             <td class="${scoreClass}">${t.avgScore >= 0 ? '+' : ''}${t.avgScore.toFixed(1)}</td>
@@ -568,7 +568,7 @@ const App = {
 
                 const teamName = (typeof getTeamName === 'function') ? getTeamName(opp.name) : null;
                 const teamCell = teamName
-                    ? `<td style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">${teamName}</td>`
+                    ? `<td style="font-size: var(--font-size-xs); color: var(--color-text-secondary);"><span class="clickable-team" onclick="App.showTeamPlayers('${teamName}')">${teamName}</span></td>`
                     : `<td style="color: var(--color-text-muted);">-</td>`;
 
                 html += `
@@ -627,7 +627,7 @@ const App = {
 
                 html += `
                     <tr>
-                        <td><strong>${t.teamName}</strong></td>
+                        <td><span class="clickable-team" onclick="App.showTeamPlayers('${t.teamName}')">${t.teamName}</span></td>
                         <td>${t.count}</td>
                         <td>${t.avgRank.toFixed(2)}</td>
                         <td class="${scoreClass}">${t.avgScore >= 0 ? '+' : ''}${t.avgScore.toFixed(1)}</td>
@@ -1071,6 +1071,48 @@ const App = {
 
         resultEl.innerHTML = html;
         resultEl.style.display = 'block';
+    },
+
+    // ==========================================
+    // 所属メンバー表示モーダル
+    // ==========================================
+    showTeamPlayers(teamName) {
+        if (!teamName || typeof TEAM_ROSTER === 'undefined') return;
+
+        // TEAM_ROSTERから所属選手をすべて抽出
+        const players = [];
+        for (const [player, team] of Object.entries(TEAM_ROSTER)) {
+            if (team === teamName) {
+                players.push(player);
+            }
+        }
+
+        if (players.length === 0) return;
+
+        // モーダルのDOMを取得して表示を更新
+        const modal = document.getElementById('custom-modal');
+        const title = document.getElementById('modal-title');
+        const body = document.getElementById('modal-body');
+
+        if (!modal || !title || !body) return;
+
+        title.textContent = `🀄 ${teamName} 所属選手`;
+        
+        let bodyHtml = '<div class="player-list">';
+        players.forEach(p => {
+            bodyHtml += `<div class="player-list-item">${p}</div>`;
+        });
+        bodyHtml += '</div>';
+        
+        body.innerHTML = bodyHtml;
+        modal.style.display = 'flex';
+    },
+
+    closeModal() {
+        const modal = document.getElementById('custom-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
 };
 
