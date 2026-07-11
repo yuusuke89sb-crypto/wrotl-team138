@@ -287,6 +287,12 @@ const App = {
                 <textarea class="form-input" id="bulk-text-${memberIndex}" rows="6" placeholder="のどっちからコピーしたデータを貼り付けてください&#10;&#10;例:&#10;1位	C0105	2026-07-04 22:00	四般南喰－－	&#10;新人0pt&#10;Ⓟ吉村悠佑(+36.9)nob929(+11.7)Ⓟ奥野真語(-1.3)Ⓟ中村毅(-47.3)"></textarea>
             </div>
             <button class="btn btn-primary btn-block" onclick="App.bulkImport(${memberIndex})">📥 一括インポート</button>
+            <div style="margin-top: var(--spacing-md); display: flex; align-items: center; gap: var(--spacing-sm);">
+                <select class="form-select" id="delete-session-${memberIndex}" style="width: 100px;">
+                    ${Array.from({ length: 17 }, (_, i) => `<option value="${i + 1}">${i + 1}節</option>`).join('')}
+                </select>
+                <button class="btn btn-danger btn-sm" onclick="App.deleteSession(${memberIndex})">🗑️ この節を削除</button>
+            </div>
         </div>
         `;
 
@@ -766,6 +772,27 @@ const App = {
         } catch (e) {
             alert(e.message);
         }
+    },
+
+    // ==========================================
+    // 節データ一括削除
+    // ==========================================
+    deleteSession(memberIndex) {
+        const session = parseInt(document.getElementById(`delete-session-${memberIndex}`).value);
+        const data = DataManager.load();
+        const memberName = data.members[memberIndex].name;
+        const count = data.members[memberIndex].games.filter(g => g.session === session).length;
+
+        if (count === 0) {
+            alert(`${memberName} の ${session}節 にはデータがありません`);
+            return;
+        }
+
+        if (!confirm(`${memberName} の ${session}節（${count}局）を削除しますか？`)) return;
+
+        const result = DataManager.deleteSession(memberIndex, session);
+        alert(`${result.deleted}局を削除しました`);
+        this.render();
     }
 };
 

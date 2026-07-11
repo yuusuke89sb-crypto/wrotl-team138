@@ -118,6 +118,19 @@ const DataManager = {
     },
 
     /**
+     * 特定メンバーの特定節のデータを一括削除
+     */
+    deleteSession(memberIndex, session) {
+        const data = this.load();
+        const member = data.members[memberIndex];
+        const before = member.games.length;
+        member.games = member.games.filter(g => g.session !== session);
+        const deleted = before - member.games.length;
+        this.save(data);
+        return { data, deleted };
+    },
+
+    /**
      * 対局を編集
      */
     updateGame(memberIndex, gameId, updates) {
