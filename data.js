@@ -41,11 +41,15 @@ const DataManager = {
     },
 
     /**
-     * データを保存
+     * データを保存（localStorage + Firebase）
      */
     save(data) {
         try {
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+            // Firebase同期
+            if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isOnline) {
+                FirebaseSync.saveData(data);
+            }
         } catch (e) {
             console.error('データ保存エラー:', e);
         }

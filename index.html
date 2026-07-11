@@ -27,6 +27,7 @@
 <body>
     <!-- Header -->
     <header class="app-header">
+        <div id="sync-status" style="position: absolute; top: 8px; right: 12px; font-size: 0.7rem;">🔴 ローカル</div>
         <h1>🀄 WROTL 2026</h1>
         <div class="team-name">チーム138♡</div>
         <div class="subtitle">WORLD RIICHI Online Team League</div>
@@ -104,8 +105,26 @@
         WROTL 2026 チーム138♡ 成績管理 — 製作者：吉村 悠佑
     </footer>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <!-- Firebase設定 ※ Firebase Console から取得した値に置き換えてください -->
+    <script>
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyAfKiheO_eDuUpE-Uq0Aw0qA4bEZV-KQos",
+            authDomain: "wrotl-team138.firebaseapp.com",
+            databaseURL: "https://wrotl-team138-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "wrotl-team138",
+            storageBucket: "wrotl-team138.firebasestorage.app",
+            messagingSenderId: "202405629819",
+            appId: "1:202405629819:web:c00f2cdba8615494b677de"
+        };
+    </script>
+
     <!-- Scripts -->
     <script src="data.js"></script>
+    <script src="firebase-sync.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

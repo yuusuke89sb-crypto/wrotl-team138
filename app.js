@@ -17,8 +17,57 @@ const App = {
             });
         });
 
+        // Firebase初期化
+        this.initFirebase();
+
         // 初期表示
         this.render();
+    },
+
+    /**
+     * Firebase初期化・リアルタイム同期
+     */
+    initFirebase() {
+        if (typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.apiKey) {
+            console.log('Firebase設定なし — ローカルモードで動作');
+            this.updateSyncStatus(false);
+            return;
+        }
+
+        const ok = FirebaseSync.init(FIREBASE_CONFIG);
+        this.updateSyncStatus(ok);
+
+        if (ok) {
+            // リアルタイム同期: 他のユーザーの変更を即時反映
+            FirebaseSync.onDataChange((data) => {
+                // localStorageも更新
+                localStorage.setItem(DataManager.STORAGE_KEY, JSON.stringify(data));
+                this.render();
+            });
+
+            // 初回: Firebaseにデータがなければローカルを送信
+            FirebaseSync.loadData().then(remoteData => {
+                if (!remoteData) {
+                    const localData = DataManager.load();
+                    FirebaseSync.saveData(localData);
+                }
+            });
+        }
+    },
+
+    /**
+     * 同期ステータス表示
+     */
+    updateSyncStatus(isOnline) {
+        const el = document.getElementById('sync-status');
+        if (!el) return;
+        if (isOnline) {
+            el.textContent = '🟢 同期中';
+            el.style.color = 'var(--color-success)';
+        } else {
+            el.textContent = '🔴 ローカル';
+            el.style.color = 'var(--color-text-muted)';
+        }
     },
 
     // ==========================================
