@@ -568,7 +568,7 @@ const App = {
 
                 const teamName = (typeof getTeamName === 'function') ? getTeamName(opp.name) : null;
                 const teamCell = teamName
-                    ? `<td style="font-size: var(--font-size-xs); color: var(--color-text-secondary);"><span class="clickable-team" onclick="App.showTeamPlayers('${teamName}')">${teamName}</span></td>`
+                    ? `<td style="font-size: var(--font-size-xs); color: var(--color-text-secondary);"><span class="clickable-team" onclick="App.showTeamPlayers('${teamName}', ${memberIndex})">${teamName}</span></td>`
                     : `<td style="color: var(--color-text-muted);">-</td>`;
 
                 html += `
@@ -627,7 +627,7 @@ const App = {
 
                 html += `
                     <tr>
-                        <td><span class="clickable-team" onclick="App.showTeamPlayers('${t.teamName}')">${t.teamName}</span></td>
+                        <td><span class="clickable-team" onclick="App.showTeamPlayers('${t.teamName}', ${memberIndex})">${t.teamName}</span></td>
                         <td>${t.count}</td>
                         <td>${t.avgRank.toFixed(2)}</td>
                         <td class="${scoreClass}">${t.avgScore >= 0 ? '+' : ''}${t.avgScore.toFixed(1)}</td>
@@ -1073,11 +1073,20 @@ const App = {
         resultEl.style.display = 'block';
     },
 
-    // ==========================================
-    // 所属メンバー表示モーダル
-    // ==========================================
-    showTeamPlayers(teamName) {
+    showTeamPlayers(teamName, memberIndex) {
         if (!teamName || typeof TEAM_ROSTER === 'undefined') return;
+
+        const data = DataManager.load();
+        
+        // 対象対局データを絞り込み（個人ページの場合はその人だけ、ダッシュボードの場合は全員）
+        let targetGames = [];
+        if (memberIndex !== undefined && memberIndex !== null) {
+            targetGames = data.members[memberIndex].games;
+        } else {
+            data.members.forEach(m => {
+                targetGames.push(...m.games);
+            });
+        }
 
         // TEAM_ROSTERから所属選手をすべて抽出
         const players = [];
@@ -1096,11 +1105,56 @@ const App = {
 
         if (!modal || !title || !body) return;
 
+        const subtitleText = (memberIndex !== undefined && memberIndex !== null) 
+            ? `${data.members[memberIndex].name} の対戦成績` 
+            : 'チーム全体の対戦成績';
+
         title.textContent = `🀄 ${teamName} 所属選手`;
         
-        let bodyHtml = '<div class="player-list">';
+        let bodyHtml = `
+            <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--spacing-sm); border-bottom: 1px solid var(--color-border); padding-bottom: var(--spacing-xs);">
+                🔍 ${subtitleText}
+            </div>
+            <div class="player-list">
+        `;
+        
         players.forEach(p => {
-            bodyHtml += `<div class="player-list-item">${p}</div>`;
+            let count = 0;
+            let totalDiff = 0;
+
+            targetGames.forEach(g => {
+                if (g.opponents && g.opponents.includes(p)) {
+                    count++;
+                    if (g.opponentScores && g.opponentScores[p] !== undefined) {
+                        totalDiff += (g.score - g.opponentScores[p]);
+                    }
+                }
+            });
+
+            let statsHtml = '';
+            if (count > 0) {
+                const diffVal = Math.round(totalDiff * 10) / 10;
+                const diffClass = diffVal >= 0 ? 'score-positive' : 'score-negative';
+                const diffSign = diffVal >= 0 ? '+' : '';
+                statsHtml = `
+                    <span class="matchup-count">${count}戦</span>
+                    <span class="matchup-diff ${diffClass}" style="font-weight: bold;">${diffSign}${diffVal.toFixed(1)} pt</span>
+                `;
+            } else {
+                statsHtml = `<span class="matchup-none">対戦なし</span>`;
+            }
+
+            bodyHtml += `
+                <div class="player-list-item">
+                    <div class="player-info">
+                        <span class="player-icon">🀄</span>
+                        <span class="player-name">${p}</span>
+                    </div>
+                    <div class="matchup-stats">
+                        ${statsHtml}
+                    </div>
+                </div>
+            `;
         });
         bodyHtml += '</div>';
         

@@ -809,15 +809,13 @@ body {
 .modal-body {
     padding: var(--spacing-md);
 }
-
 .player-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: var(--spacing-sm) 0;
     border-bottom: 1px solid var(--color-border);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
     color: var(--color-text);
-    font-weight: 500;
     font-size: var(--font-size-sm);
 }
 
@@ -825,9 +823,29 @@ body {
     border-bottom: none;
 }
 
-.player-list-item::before {
-    content: "🀄";
-    font-size: 0.8rem;
+.player-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-weight: 500;
+}
+
+.player-icon {
+    font-size: 0.85rem;
+}
+
+.matchup-stats {
+    font-size: var(--font-size-xs);
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+.matchup-count {
+    color: var(--color-text-secondary);
+    background: var(--color-surface-2);
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
 }
 
 /* Clickable Team name */
@@ -844,4 +862,3 @@ body {
     color: var(--color-accent-pink);
     text-decoration-style: solid;
 }
-
