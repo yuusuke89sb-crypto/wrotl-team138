@@ -493,8 +493,20 @@ body {
 }
 
 .best-highlight {
-    background: rgba(99, 102, 241, 0.1) !important;
-    border-left: 3px solid var(--color-primary);
+    background: rgba(251, 191, 36, 0.06) !important;
+    border-left: 4px solid var(--color-rank-1) !important;
+}
+
+.best-badge {
+    display: inline-block;
+    padding: 1px 4px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    border-radius: 3px;
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--color-rank-1);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    vertical-align: middle;
 }
 
 /* ==========================================

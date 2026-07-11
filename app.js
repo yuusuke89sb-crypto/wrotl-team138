@@ -148,7 +148,72 @@ const App = {
         totalEl.style.color = rounded > 0 ? 'var(--color-success)' : rounded < 0 ? 'var(--color-danger)' : 'var(--color-text)';
 
         // チームグラフ
+        this.renderTeamTotalTrendChart(data);
         this.renderTeamChart(data);
+    },
+
+    renderTeamTotalTrendChart(data) {
+        const ctx = document.getElementById('team-total-trend-chart');
+        if (!ctx) return;
+
+        if (this.charts.teamTotal) this.charts.teamTotal.destroy();
+
+        const sessionData = DataManager.calcTeamCumulativeBySession(data);
+        if (sessionData.length === 0) return;
+
+        const labels = sessionData.map(d => `${d.session}節`);
+        const cumulativeScores = sessionData.map(d => d.cumulative);
+
+        this.charts.teamTotal = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'チーム合計累積スコア',
+                    data: cumulativeScores,
+                    borderColor: 'var(--color-accent-pink)',
+                    backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                    tension: 0.2,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'var(--color-accent-pink)',
+                    borderWidth: 3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#e2e8f0', font: { family: 'Noto Sans JP', weight: 'bold' } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const index = context.dataIndex;
+                                const item = sessionData[index];
+                                const scoreSign = item.score >= 0 ? '+' : '';
+                                const cumSign = item.cumulative >= 0 ? '+' : '';
+                                return [
+                                    ` 累計: ${cumSign}${item.cumulative.toFixed(1)} pt`,
+                                    ` この節のスコア: ${scoreSign}${item.score.toFixed(1)} pt`
+                                ];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: '#334155' }
+                    },
+                    y: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: '#334155' }
+                    }
+                }
+            }
+        });
     },
 
     renderTeamChart(data) {
@@ -216,6 +281,7 @@ const App = {
         const stats = DataManager.calcStats(member.games);
         const best = DataManager.calcBest20(member.games);
         const oppStats = DataManager.calcOpponentStats(member.games);
+        const teamStats = DataManager.calcTeamStats(member.games);
         const container = document.getElementById(`tab-member-${memberIndex}`);
 
         let html = '';
@@ -310,6 +376,20 @@ const App = {
                     ${bestSign}${best.bestScore.toFixed(1)}
                 </div>
                 ${stats.totalGames >= 20 ? `<div style="font-size: var(--font-size-xs); color: var(--color-text-muted);">第${best.startIndex + 1}局目〜第${best.endIndex + 1}局目</div>` : `<div style="font-size: var(--font-size-xs); color: var(--color-text-muted);">全${stats.totalGames}局の合計（20局未満）</div>`}
+            </div>
+        </div>
+
+        <!-- ベスト20改善シミュレーター -->
+        <div class="card">
+            <h2 class="card-title">🔮 ベスト20改善シミュレーター</h2>
+            <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: var(--spacing-md);">
+                次の半荘で想定するスコアを入力し、ベスト20の合計スコアがどう変わるか試算できます。
+            </div>
+            <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-md);">
+                <input type="number" step="0.1" class="form-input" id="sim-score-${memberIndex}" placeholder="例: +45.2" style="flex: 1;">
+                <button class="btn btn-primary" onclick="App.runSimulation(${memberIndex})">🔮 試算する</button>
+            </div>
+            <div id="sim-result-${memberIndex}" style="display: none; padding: var(--spacing-md); border-radius: var(--radius-md); background: var(--color-surface-2); border-left: 4px solid var(--color-primary); font-size: var(--font-size-md);">
             </div>
         </div>
         `;
@@ -455,6 +535,59 @@ const App = {
         html += `</div>`;
 
         // ==========================================
+        // 対戦チーム戦績
+        // ==========================================
+        html += `
+        <div class="card">
+            <h2 class="card-title">🤝 対戦チームとの戦績</h2>
+        `;
+
+        if (teamStats.length > 0) {
+            html += `
+            <div class="opponent-table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>対戦チーム</th>
+                            <th>回数</th>
+                            <th>平均順位</th>
+                            <th>平均スコア</th>
+                            <th>合計</th>
+                            <th>スコア差</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            teamStats.forEach(t => {
+                const scoreClass = t.avgScore >= 0 ? 'score-positive' : 'score-negative';
+                const totalClass = t.totalScore >= 0 ? 'score-positive' : 'score-negative';
+
+                let diffCell = '<td style="color: var(--color-text-muted);">-</td>';
+                if (t.avgDiff !== null) {
+                    const diffClass = t.totalDiff >= 0 ? 'score-positive' : 'score-negative';
+                    const diffSign = t.totalDiff >= 0 ? '+' : '';
+                    const avgDiffSign = t.avgDiff >= 0 ? '+' : '';
+                    diffCell = `<td class="${diffClass}" title="平均差: ${avgDiffSign}${t.avgDiff.toFixed(1)}/局">${diffSign}${t.totalDiff.toFixed(1)}</td>`;
+                }
+
+                html += `
+                    <tr>
+                        <td><strong>${t.teamName}</strong></td>
+                        <td>${t.count}</td>
+                        <td>${t.avgRank.toFixed(2)}</td>
+                        <td class="${scoreClass}">${t.avgScore >= 0 ? '+' : ''}${t.avgScore.toFixed(1)}</td>
+                        <td class="${totalClass}">${t.totalScore >= 0 ? '+' : ''}${t.totalScore.toFixed(1)}</td>
+                        ${diffCell}
+                    </tr>
+                `;
+            });
+            html += `</tbody></table></div>`;
+        } else {
+            html += `<div class="empty-state"><div class="empty-icon">🤷</div><p>対戦チームのデータがまだありません</p></div>`;
+        }
+        html += `</div>`;
+
+        // ==========================================
         // 対局一覧
         // ==========================================
         html += `
@@ -480,12 +613,16 @@ const App = {
             `;
             member.games.forEach((g, gi) => {
                 const scoreClass = g.score >= 0 ? 'score-positive' : 'score-negative';
-                const isBest = stats.totalGames >= 20 && gi >= best.startIndex && gi <= best.endIndex;
+                const isBest = (stats.totalGames < 20) || (gi >= best.startIndex && gi <= best.endIndex);
                 const highlightClass = isBest ? ' best-highlight' : '';
                 const oppText = (g.opponents || []).filter(o => o).join(', ') || '-';
+                const indexCell = isBest 
+                    ? `<td>${gi + 1} <span class="best-badge" title="ベスト対象">★</span></td>` 
+                    : `<td>${gi + 1}</td>`;
+
                 html += `
                     <tr class="${highlightClass}">
-                        <td>${gi + 1}</td>
+                        ${indexCell}
                         <td>${g.session}節</td>
                         <td class="${scoreClass}">${g.score >= 0 ? '+' : ''}${g.score.toFixed(1)}</td>
                         <td><span class="rank-badge rank-${g.rank}">${g.rank}</span></td>
@@ -800,6 +937,85 @@ const App = {
         const result = DataManager.deleteSession(memberIndex, session);
         alert(`${result.deleted}局を削除しました`);
         this.render();
+    },
+
+    // ==========================================
+    // ベスト20改善シミュレーター実行
+    // ==========================================
+    runSimulation(memberIndex) {
+        const inputEl = document.getElementById(`sim-score-${memberIndex}`);
+        const resultEl = document.getElementById(`sim-result-${memberIndex}`);
+        if (!inputEl || !resultEl) return;
+
+        const valStr = inputEl.value.trim();
+        if (valStr === '') {
+            alert('想定スコアを入力してください');
+            return;
+        }
+
+        const simScore = parseFloat(valStr);
+        if (isNaN(simScore)) {
+            alert('有効な数値を入力してください');
+            return;
+        }
+
+        const data = DataManager.load();
+        const member = data.members[memberIndex];
+        const currentBest = DataManager.calcBest20(member.games);
+
+        // シミュレーション用に対局データを末尾に追加
+        const simGame = {
+            id: Date.now(),
+            session: 99,
+            score: simScore,
+            rank: 1,
+            opponents: []
+        };
+
+        const simulatedGames = [...member.games, simGame];
+        const newBest = DataManager.calcBest20(simulatedGames);
+
+        const currentScore = currentBest.bestScore;
+        const newScore = newBest.bestScore;
+        const diff = Math.round((newScore - currentScore) * 10) / 10;
+        const diffSign = diff >= 0 ? '+' : '';
+        const diffColor = diff > 0 ? 'var(--color-success)' : diff < 0 ? 'var(--color-danger)' : 'var(--color-text)';
+
+        let html = '';
+        if (member.games.length < 20) {
+            html = `
+                <div style="font-weight: bold; margin-bottom: var(--spacing-sm);">🔮 試算結果:</div>
+                <div style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">対局数が20局未満のため、スコアはそのまま加算されます。</div>
+                <div style="margin-top: var(--spacing-sm); font-size: var(--font-size-md);">
+                    合計スコア: <strong>${currentScore >= 0 ? '+' : ''}${currentScore.toFixed(1)}</strong> → 
+                    <strong style="color: var(--color-success); font-size: var(--font-size-lg);">${newScore >= 0 ? '+' : ''}${newScore.toFixed(1)}</strong> 
+                    (<span style="color: ${diffColor}; font-weight: bold;">${diffSign}${diff.toFixed(1)} pt</span>)
+                </div>
+            `;
+        } else {
+            const isImproved = diff > 0;
+            
+            html = `
+                <div style="font-weight: bold; margin-bottom: var(--spacing-sm);">🔮 試算結果:</div>
+                <div style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">
+                    想定スコア <strong>${simScore >= 0 ? '+' : ''}${simScore.toFixed(1)}</strong> を追加した新しい20連戦ウインドウで計算します。
+                </div>
+                <div style="margin-top: var(--spacing-md); font-size: var(--font-size-md);">
+                    ベスト20: <strong>${currentScore >= 0 ? '+' : ''}${currentScore.toFixed(1)}</strong> → 
+                    <strong style="color: ${isImproved ? 'var(--color-success)' : 'var(--color-text-secondary)'}; font-size: var(--font-size-lg);">${newScore >= 0 ? '+' : ''}${newScore.toFixed(1)}</strong> 
+                    (<span style="color: ${diffColor}; font-weight: bold;">${diffSign}${diff.toFixed(1)} pt</span>)
+                </div>
+            `;
+
+            if (isImproved) {
+                html += `<div style="margin-top: var(--spacing-sm); color: var(--color-success); font-size: var(--font-size-sm); font-weight: bold;">✨ スコアが改善されます！</div>`;
+            } else {
+                html += `<div style="margin-top: var(--spacing-sm); color: var(--color-text-muted); font-size: var(--font-size-sm);">スコアは改善されません（ベスト20の範囲は変化しないか、新しいゲームを含まない連続20半荘の方が高いスコアです）。</div>`;
+            }
+        }
+
+        resultEl.innerHTML = html;
+        resultEl.style.display = 'block';
     }
 };
 

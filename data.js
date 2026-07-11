@@ -509,5 +509,84 @@ const DataManager = {
 
         this.save(data);
         return { data, importedCount: parsed.length };
+    },
+
+    /**
+     * チーム全体の節ごとの累積スコアを計算
+     */
+    calcTeamCumulativeBySession(data) {
+        const sessionScores = Array(17).fill(0);
+        let maxSession = 0;
+        data.members.forEach(m => {
+            m.games.forEach(g => {
+                const s = g.session;
+                if (s >= 1 && s <= 17) {
+                    sessionScores[s - 1] += g.score;
+                    if (s > maxSession) maxSession = s;
+                }
+            });
+        });
+        if (maxSession === 0) maxSession = 1;
+        let cumulative = 0;
+        return sessionScores.slice(0, maxSession).map((score, index) => {
+            cumulative += score;
+            return {
+                session: index + 1,
+                score: Math.round(score * 10) / 10,
+                cumulative: Math.round(cumulative * 10) / 10
+            };
+        });
+    },
+
+    /**
+     * 対戦チームごとの戦績を集計
+     */
+    calcTeamStats(games) {
+        const teamMap = {};
+        games.forEach(g => {
+            if (!g.opponents) return;
+            g.opponents.forEach(opp => {
+                if (!opp || opp.trim() === '') return;
+                const opponentName = opp.trim();
+                const teamName = (typeof getTeamName === 'function') ? getTeamName(opponentName) : null;
+                if (!teamName) return; // 登録チームでない場合は対象外
+
+                if (!teamMap[teamName]) {
+                    teamMap[teamName] = {
+                        teamName,
+                        count: 0,
+                        totalScore: 0,
+                        totalOppScore: 0,
+                        totalDiff: 0,
+                        hasDiffData: false,
+                        rankSum: 0,
+                        ranks: { 1: 0, 2: 0, 3: 0, 4: 0 }
+                    };
+                }
+                const t = teamMap[teamName];
+                t.count++;
+                t.totalScore += g.score;
+                t.rankSum += g.rank;
+                t.ranks[g.rank]++;
+
+                if (g.opponentScores && g.opponentScores[opponentName] !== undefined) {
+                    const oppScore = g.opponentScores[opponentName];
+                    t.totalOppScore += oppScore;
+                    t.totalDiff += (g.score - oppScore);
+                    t.hasDiffData = true;
+                }
+            });
+        });
+
+        return Object.values(teamMap)
+            .map(t => ({
+                ...t,
+                totalScore: Math.round(t.totalScore * 10) / 10,
+                avgScore: Math.round((t.totalScore / t.count) * 10) / 10,
+                avgRank: Math.round((t.rankSum / t.count) * 100) / 100,
+                totalDiff: Math.round(t.totalDiff * 10) / 10,
+                avgDiff: t.hasDiffData ? Math.round((t.totalDiff / t.count) * 10) / 10 : null
+            }))
+            .sort((a, b) => b.count - a.count);
     }
 };
