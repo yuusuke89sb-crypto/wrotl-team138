@@ -61,6 +61,9 @@ const DataManager = {
             if (!Array.isArray(member.games)) {
                 member.games = Object.values(member.games);
             }
+            // nullやundefinedの対局データを除外
+            member.games = member.games.filter(g => g !== null && g !== undefined);
+
             // 各ゲームのopponentsをサニタイズ
             member.games.forEach(g => {
                 if (!g.opponents) g.opponents = [];

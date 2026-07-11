@@ -150,6 +150,61 @@ const App = {
         // チームグラフ
         this.renderTeamTotalTrendChart(data);
         this.renderTeamChart(data);
+
+        // チーム全体の対戦相手戦績
+        const allGames = [];
+        data.members.forEach(m => {
+            allGames.push(...m.games);
+        });
+        const teamOppStats = DataManager.calcTeamStats(allGames);
+        const oppCard = document.getElementById('team-opponents-card');
+        if (oppCard) {
+            let oppHtml = `<h2 class="card-title">🤝 チーム全体の対戦相手（チーム別）戦績</h2>`;
+            if (teamOppStats.length > 0) {
+                oppHtml += `
+                <div class="opponent-table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>対戦チーム</th>
+                                <th>回数</th>
+                                <th>平均順位</th>
+                                <th>平均スコア</th>
+                                <th>合計</th>
+                                <th>スコア差</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                teamOppStats.forEach(t => {
+                    const scoreClass = t.avgScore >= 0 ? 'score-positive' : 'score-negative';
+                    const totalClass = t.totalScore >= 0 ? 'score-positive' : 'score-negative';
+
+                    let diffCell = '<td style="color: var(--color-text-muted);">-</td>';
+                    if (t.avgDiff !== null) {
+                        const diffClass = t.totalDiff >= 0 ? 'score-positive' : 'score-negative';
+                        const diffSign = t.totalDiff >= 0 ? '+' : '';
+                        const avgDiffSign = t.avgDiff >= 0 ? '+' : '';
+                        diffCell = `<td class="${diffClass}" title="平均差: ${avgDiffSign}${t.avgDiff.toFixed(1)}/局">${diffSign}${t.totalDiff.toFixed(1)}</td>`;
+                    }
+
+                    oppHtml += `
+                        <tr>
+                            <td><strong>${t.teamName}</strong></td>
+                            <td>${t.count}</td>
+                            <td>${t.avgRank.toFixed(2)}</td>
+                            <td class="${scoreClass}">${t.avgScore >= 0 ? '+' : ''}${t.avgScore.toFixed(1)}</td>
+                            <td class="${totalClass}">${t.totalScore >= 0 ? '+' : ''}${t.totalScore.toFixed(1)}</td>
+                            ${diffCell}
+                        </tr>
+                    `;
+                });
+                oppHtml += `</tbody></table></div>`;
+            } else {
+                oppHtml += `<div class="empty-state"><div class="empty-icon">🤷</div><p>対戦チームのデータがまだありません</p></div>`;
+            }
+            oppCard.innerHTML = oppHtml;
+        }
     },
 
     renderTeamTotalTrendChart(data) {
