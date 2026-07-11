@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="WROTL 2026 チーム138♡ 成績管理アプリ">
+    <title>WROTL チーム138♡</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Icons -->
+    <link rel="icon" href="team_logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="team_logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WROTL 138♡">
+    <meta name="theme-color" content="#0f172a">
+</head>
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <h1>🀄 WROTL 2026</h1>
+        <div class="team-name">チーム138♡</div>
+        <div class="subtitle">WORLD RIICHI Online Team League</div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav" id="tab-nav">
+        <button class="tab-btn active" data-tab="dashboard">📊 ダッシュボード</button>
+        <button class="tab-btn" data-tab="member-0">Ⓟ吉村悠佑</button>
+        <button class="tab-btn" data-tab="member-1">らべる</button>
+        <button class="tab-btn" data-tab="member-2">えりんぎ138</button>
+        <button class="tab-btn" data-tab="member-3">M138</button>
+    </nav>
+
+    <div class="container">
+        <!-- ==========================================
+             ダッシュボード
+             ========================================== -->
+        <div class="tab-content active" id="tab-dashboard">
+            <!-- チーム合計 -->
+            <div class="team-total-card" id="team-total-card">
+                <div class="total-label">チーム合計（ベスト20半荘×4人）</div>
+                <div class="total-score" id="team-total-score">0.0</div>
+            </div>
+
+            <!-- メンバーカード -->
+            <div class="dashboard-grid" id="dashboard-grid">
+                <!-- JSで動的生成 -->
+            </div>
+
+            <!-- チーム統計 -->
+            <div class="card">
+                <h2 class="card-title">📈 チームポイント推移</h2>
+                <div class="chart-container">
+                    <canvas id="team-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- データ管理 -->
+            <!-- データ管理（一旦非表示）
+            <div class="card">
+                <h2 class="card-title">⚙️ データ管理</h2>
+                <div class="action-bar">
+                    <button class="btn btn-secondary" onclick="App.exportData()">📤 エクスポート</button>
+                    <button class="btn btn-secondary" onclick="App.showImportDialog()">📥 インポート</button>
+                    <button class="btn btn-danger btn-sm" onclick="App.resetData()">🗑️ リセット</button>
+                </div>
+                <div id="import-dialog" style="display:none; margin-top: var(--spacing-md);">
+                    <textarea id="import-textarea" class="form-input" rows="4" placeholder="JSONデータを貼り付け"></textarea>
+                    <div style="margin-top: var(--spacing-sm); display: flex; gap: var(--spacing-sm);">
+                        <button class="btn btn-primary btn-sm" onclick="App.importData()">インポート実行</button>
+                        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-dialog').style.display='none'">キャンセル</button>
+                    </div>
+                </div>
+            </div>
+            -->
+        </div>
+
+        <!-- ==========================================
+             個人ページ (4人分、JSで中身を切り替え)
+             ========================================== -->
+        <div class="tab-content" id="tab-member-0"></div>
+        <div class="tab-content" id="tab-member-1"></div>
+        <div class="tab-content" id="tab-member-2"></div>
+        <div class="tab-content" id="tab-member-3"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        WROTL 2026 チーム138♡ 成績管理 — 製作者：吉村 悠佑
+    </footer>
+
+    <!-- Scripts -->
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
