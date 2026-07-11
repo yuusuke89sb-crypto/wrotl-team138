@@ -40,8 +40,9 @@ const App = {
         if (ok) {
             // リアルタイム同期: 他のユーザーの変更を即時反映
             FirebaseSync.onDataChange((data) => {
-                // localStorageも更新
-                localStorage.setItem(DataManager.STORAGE_KEY, JSON.stringify(data));
+                // Firebaseデータをサニタイズしてから保存
+                const sanitized = DataManager.sanitizeData(data);
+                localStorage.setItem(DataManager.STORAGE_KEY, JSON.stringify(sanitized));
                 this.render();
             });
 

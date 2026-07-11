@@ -32,12 +32,46 @@ const DataManager = {
                 if (!data.members || data.members.length !== 4) {
                     return this.getDefaultData();
                 }
-                return data;
+                return this.sanitizeData(data);
             }
         } catch (e) {
             console.error('データ読み込みエラー:', e);
         }
         return this.getDefaultData();
+    },
+
+    /**
+     * データをサニタイズ（Firebase互換性対応）
+     * Firebaseは空配列をnullに変換するため、復元時に修正が必要
+     */
+    sanitizeData(data) {
+        if (!data || !data.members) return this.getDefaultData();
+
+        // membersが配列でない場合（Firebaseがオブジェクトに変換することがある）
+        if (!Array.isArray(data.members)) {
+            data.members = Object.values(data.members);
+        }
+
+        data.members.forEach(member => {
+            // gamesがnullや未定義の場合
+            if (!member.games) {
+                member.games = [];
+            }
+            // gamesが配列でない場合（Firebaseがオブジェクトに変換）
+            if (!Array.isArray(member.games)) {
+                member.games = Object.values(member.games);
+            }
+            // 各ゲームのopponentsをサニタイズ
+            member.games.forEach(g => {
+                if (!g.opponents) g.opponents = [];
+                if (!Array.isArray(g.opponents)) {
+                    g.opponents = Object.values(g.opponents);
+                }
+                if (!g.opponentScores) g.opponentScores = {};
+            });
+        });
+
+        return data;
     },
 
     /**
