@@ -409,6 +409,7 @@ const App = {
                     <thead>
                         <tr>
                             <th>対戦相手</th>
+                            <th>チーム</th>
                             <th>回数</th>
                             <th>平均順位</th>
                             <th>平均スコア</th>
@@ -430,9 +431,15 @@ const App = {
                     diffCell = `<td class="${diffClass}" title="平均差: ${avgDiffSign}${opp.avgDiff.toFixed(1)}/局">${diffSign}${opp.totalDiff.toFixed(1)}</td>`;
                 }
 
+                const teamName = (typeof getTeamName === 'function') ? getTeamName(opp.name) : null;
+                const teamCell = teamName
+                    ? `<td style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">${teamName}</td>`
+                    : `<td style="color: var(--color-text-muted);">-</td>`;
+
                 html += `
                     <tr>
                         <td>${opp.name}</td>
+                        ${teamCell}
                         <td>${opp.count}</td>
                         <td>${opp.avgRank.toFixed(2)}</td>
                         <td class="${scoreClass}">${opp.avgScore >= 0 ? '+' : ''}${opp.avgScore.toFixed(1)}</td>
