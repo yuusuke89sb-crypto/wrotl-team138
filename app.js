@@ -357,6 +357,7 @@ const App = {
                             <th>平均順位</th>
                             <th>平均スコア</th>
                             <th>合計</th>
+                            <th>スコア差</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -364,6 +365,15 @@ const App = {
             oppStats.forEach(opp => {
                 const scoreClass = opp.avgScore >= 0 ? 'score-positive' : 'score-negative';
                 const totalClass = opp.totalScore >= 0 ? 'score-positive' : 'score-negative';
+
+                let diffCell = '<td style="color: var(--color-text-muted);">-</td>';
+                if (opp.avgDiff !== null) {
+                    const diffClass = opp.totalDiff >= 0 ? 'score-positive' : 'score-negative';
+                    const diffSign = opp.totalDiff >= 0 ? '+' : '';
+                    const avgDiffSign = opp.avgDiff >= 0 ? '+' : '';
+                    diffCell = `<td class="${diffClass}" title="平均差: ${avgDiffSign}${opp.avgDiff.toFixed(1)}/局">${diffSign}${opp.totalDiff.toFixed(1)}</td>`;
+                }
+
                 html += `
                     <tr>
                         <td>${opp.name}</td>
@@ -371,6 +381,7 @@ const App = {
                         <td>${opp.avgRank.toFixed(2)}</td>
                         <td class="${scoreClass}">${opp.avgScore >= 0 ? '+' : ''}${opp.avgScore.toFixed(1)}</td>
                         <td class="${totalClass}">${opp.totalScore >= 0 ? '+' : ''}${opp.totalScore.toFixed(1)}</td>
+                        ${diffCell}
                     </tr>
                 `;
             });

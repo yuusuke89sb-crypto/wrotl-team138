@@ -216,6 +216,7 @@ const DataManager = {
 
         games.forEach(g => {
             if (!g.opponents) return;
+            // opponents が文字列配列の場合と混在を処理
             g.opponents.forEach(opp => {
                 if (!opp || opp.trim() === '') return;
                 const name = opp.trim();
@@ -224,6 +225,9 @@ const DataManager = {
                         name,
                         count: 0,
                         totalScore: 0,
+                        totalOppScore: 0,
+                        totalDiff: 0,
+                        hasDiffData: false,
                         rankSum: 0,
                         ranks: { 1: 0, 2: 0, 3: 0, 4: 0 }
                     };
@@ -232,6 +236,14 @@ const DataManager = {
                 opponentMap[name].totalScore += g.score;
                 opponentMap[name].rankSum += g.rank;
                 opponentMap[name].ranks[g.rank]++;
+
+                // 対戦相手スコアがある場合、スコア差を計算
+                if (g.opponentScores && g.opponentScores[name] !== undefined) {
+                    const oppScore = g.opponentScores[name];
+                    opponentMap[name].totalOppScore += oppScore;
+                    opponentMap[name].totalDiff += (g.score - oppScore);
+                    opponentMap[name].hasDiffData = true;
+                }
             });
         });
 
@@ -240,7 +252,9 @@ const DataManager = {
                 ...opp,
                 totalScore: Math.round(opp.totalScore * 10) / 10,
                 avgScore: Math.round((opp.totalScore / opp.count) * 100) / 100,
-                avgRank: Math.round((opp.rankSum / opp.count) * 100) / 100
+                avgRank: Math.round((opp.rankSum / opp.count) * 100) / 100,
+                totalDiff: Math.round(opp.totalDiff * 10) / 10,
+                avgDiff: opp.hasDiffData ? Math.round((opp.totalDiff / opp.count) * 100) / 100 : null
             }))
             .sort((a, b) => b.count - a.count);
     },
@@ -314,14 +328,14 @@ const DataManager = {
         if (yoshimura.games.length > 0) return data;
 
         const initialGames = [
-            { id: 1, session: 1, score: 36.9, rank: 1, opponents: ['nob929', 'Ⓟ奥野真語', 'Ⓟ中村毅'], date: '2026-07-04' },
-            { id: 2, session: 1, score: 8.1, rank: 2, opponents: ['Ⓟ渡邊真央', 'Ⓟ古本和宏', 'Ⓟ奥野真語'], date: '2026-07-04' },
-            { id: 3, session: 1, score: -30.2, rank: 4, opponents: ['Ⓟ千本松紘子', 'Ⓟ岡田裕太', 'Ⓟ奥野真語'], date: '2026-07-04' },
-            { id: 4, session: 1, score: 7.4, rank: 2, opponents: ['Ⓟ千本松紘子', 'えんま', 'れっくす016'], date: '2026-07-04' },
-            { id: 5, session: 1, score: 6.7, rank: 2, opponents: ['れっくす016', 'Ⓟ島秀彰', 'えんま'], date: '2026-07-05' },
-            { id: 6, session: 1, score: 13.5, rank: 2, opponents: ['Ⓟ中村毅', 'Ⓟ朝比奈ゆり', 'Ⓟ黒木真生'], date: '2026-07-05' },
-            { id: 7, session: 1, score: 1.6, rank: 3, opponents: ['Ⓟ朝比奈ゆり', 'beyonce', '入海翔'], date: '2026-07-05' },
-            { id: 8, session: 1, score: 17.9, rank: 2, opponents: ['Ⓟ貴志功武', '入海翔', 'Ⓟ堀部雄太'], date: '2026-07-05' }
+            { id: 1, session: 1, score: 36.9, rank: 1, opponents: ['nob929', 'Ⓟ奥野真語', 'Ⓟ中村毅'], opponentScores: {'nob929': 11.7, 'Ⓟ奥野真語': -1.3, 'Ⓟ中村毅': -47.3}, date: '2026-07-04' },
+            { id: 2, session: 1, score: 8.1, rank: 2, opponents: ['Ⓟ渡邊真央', 'Ⓟ古本和宏', 'Ⓟ奥野真語'], opponentScores: {'Ⓟ渡邊真央': 18.7, 'Ⓟ古本和宏': -7.6, 'Ⓟ奥野真語': -19.2}, date: '2026-07-04' },
+            { id: 3, session: 1, score: -30.2, rank: 4, opponents: ['Ⓟ千本松紘子', 'Ⓟ岡田裕太', 'Ⓟ奥野真語'], opponentScores: {'Ⓟ千本松紘子': 21.9, 'Ⓟ岡田裕太': 10.5, 'Ⓟ奥野真語': -2.2}, date: '2026-07-04' },
+            { id: 4, session: 1, score: 7.4, rank: 2, opponents: ['Ⓟ千本松紘子', 'えんま', 'れっくす016'], opponentScores: {'Ⓟ千本松紘子': 20.0, 'えんま': -2.7, 'れっくす016': -24.7}, date: '2026-07-04' },
+            { id: 5, session: 1, score: 6.7, rank: 2, opponents: ['れっくす016', 'Ⓟ島秀彰', 'えんま'], opponentScores: {'れっくす016': 32.7, 'Ⓟ島秀彰': -11.8, 'えんま': -27.6}, date: '2026-07-05' },
+            { id: 6, session: 1, score: 13.5, rank: 2, opponents: ['Ⓟ中村毅', 'Ⓟ朝比奈ゆり', 'Ⓟ黒木真生'], opponentScores: {'Ⓟ中村毅': 34.8, 'Ⓟ朝比奈ゆり': -11.8, 'Ⓟ黒木真生': -36.5}, date: '2026-07-05' },
+            { id: 7, session: 1, score: 1.6, rank: 3, opponents: ['Ⓟ朝比奈ゆり', 'beyonce', '入海翔'], opponentScores: {'Ⓟ朝比奈ゆり': 27.8, 'beyonce': 17.4, '入海翔': -46.8}, date: '2026-07-05' },
+            { id: 8, session: 1, score: 17.9, rank: 2, opponents: ['Ⓟ貴志功武', '入海翔', 'Ⓟ堀部雄太'], opponentScores: {'Ⓟ貴志功武': 30.3, '入海翔': -16.8, 'Ⓟ堀部雄太': -31.4}, date: '2026-07-05' }
         ];
 
         yoshimura.games = initialGames;
@@ -388,10 +402,13 @@ const DataManager = {
                 const sorted = [...players].sort((a, b) => b.score - a.score);
                 const rank = sorted.findIndex(p => p.name === playerName) + 1;
 
-                // 対戦相手
-                const opponents = players
-                    .filter(p => p.name !== playerName)
-                    .map(p => p.name);
+                // 対戦相手とスコア
+                const opponents = [];
+                const opponentScores = {};
+                players.filter(p => p.name !== playerName).forEach(p => {
+                    opponents.push(p.name);
+                    opponentScores[p.name] = p.score;
+                });
 
                 // 日付を抽出
                 let date = '';
@@ -406,6 +423,7 @@ const DataManager = {
                     score: self.score,
                     rank,
                     opponents,
+                    opponentScores,
                     date
                 });
             }
