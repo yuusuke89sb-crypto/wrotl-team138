@@ -229,7 +229,7 @@ const App = {
                 <div class="form-group">
                     <label class="form-label">節</label>
                     <select class="form-select" id="add-session-${memberIndex}">
-                        ${Array.from({ length: 13 }, (_, i) => `<option value="${i + 1}">${i + 1}節</option>`).join('')}
+                        ${Array.from({ length: 17 }, (_, i) => `<option value="${i + 1}">${i + 1}節</option>`).join('')}
                     </select>
                 </div>
                 <div class="form-group">
@@ -275,7 +275,7 @@ const App = {
                 <div class="form-group">
                     <label class="form-label">節</label>
                     <select class="form-select" id="bulk-session-${memberIndex}">
-                        ${Array.from({ length: 13 }, (_, i) => `<option value="${i + 1}">${i + 1}節</option>`).join('')}
+                        ${Array.from({ length: 17 }, (_, i) => `<option value="${i + 1}">${i + 1}節</option>`).join('')}
                     </select>
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
