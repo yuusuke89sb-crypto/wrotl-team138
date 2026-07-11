@@ -670,7 +670,14 @@ const App = {
                 const scoreClass = g.score >= 0 ? 'score-positive' : 'score-negative';
                 const isBest = (stats.totalGames < 20) || (gi >= best.startIndex && gi <= best.endIndex);
                 const highlightClass = isBest ? ' best-highlight' : '';
-                const oppText = (g.opponents || []).filter(o => o).join(', ') || '-';
+                const oppText = (g.opponents || []).filter(o => o).map(oppName => {
+                    if (g.opponentScores && g.opponentScores[oppName] !== undefined) {
+                        const oppScore = g.opponentScores[oppName];
+                        const sign = oppScore >= 0 ? '+' : '';
+                        return `${oppName}(${sign}${oppScore.toFixed(1)})`;
+                    }
+                    return oppName;
+                }).join(', ') || '-';
                 const indexCell = isBest 
                     ? `<td>${gi + 1} <span class="best-badge" title="ベスト対象">★</span></td>` 
                     : `<td>${gi + 1}</td>`;
@@ -681,7 +688,7 @@ const App = {
                         <td>${g.session}節</td>
                         <td class="${scoreClass}">${g.score >= 0 ? '+' : ''}${g.score.toFixed(1)}</td>
                         <td><span class="rank-badge rank-${g.rank}">${g.rank}</span></td>
-                        <td style="font-size: var(--font-size-xs); max-width: 150px; overflow: hidden; text-overflow: ellipsis;">${oppText}</td>
+                        <td style="font-size: var(--font-size-xs); max-width: 260px; word-break: break-all;">${oppText}</td>
                         <td><button class="delete-btn" onclick="App.deleteGame(${memberIndex}, ${g.id})" title="削除">✕</button></td>
                     </tr>
                 `;
